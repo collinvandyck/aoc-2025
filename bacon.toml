@@ -8,6 +8,10 @@
 default_job = "nextest"
 env.CARGO_TERM_COLOR = "always"
 
+[jobs.02]
+command = ["cargo", "run", "--bin", "02"]
+need_stdout = true
+
 [jobs.check]
 command = ["cargo", "check"]
 need_stdout = false
