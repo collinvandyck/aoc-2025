@@ -1,50 +1,73 @@
-use std::iter;
+use anyhow::Result;
+use std::{isize, iter, num::ParseIntError, ops};
+
+static EX1: &str = include_str!("../../data/01/ex1");
+static IN1: &str = include_str!("../../data/01/in1");
+const BND: isize = 100;
 
 fn main() {
-    let ex1 = aoc::load_data("01/ex1");
-    let in1 = aoc::load_data("01/in1");
-    println!("ex1: {}", run(&ex1, true));
-    println!("pt1: {}", run(&in1, true));
-    println!("ex2: {}", run(&ex1, false));
-    println!("pt2: {}", run(&in1, false));
+    println!("ex1: {}", run(EX1, true));
+    println!("pt1: {}", run(IN1, true));
+    println!("ex2: {}", run(EX1, false));
+    println!("pt2: {}", run(IN1, false));
 }
 
-fn run(data: &str, pt1: bool) -> usize {
-    let mut cur = 50;
+fn run(data: &str, pt1: bool) -> isize {
     let mut res = 0;
-    let deltas = data.lines().map(|s| {
-        let dir = &s[0..1];
-        let mut amt = (&s[1..]).parse::<i64>().unwrap();
-        if dir == "L" {
-            amt *= -1
+    let mut cur: isize = 50;
+    for line in data.trim().lines() {
+        let dlt = parse_dlt(line);
+        let nxt = (((cur + dlt) % BND) + BND) % BND;
+        if pt1 {
+            if nxt == 0 {
+                res += 1;
+            }
+        } else {
+            let min = cur.min(cur + dlt);
+            let max = cur.max(cur + dlt);
+            if min % 100 == 0 || max % 100 == 0 {
+                res += (max - min) / 100;
+                if nxt % 100 == 0 {
+                    res += 1;
+                }
+            } else {
+                res += max.div_euclid(100) - min.div_euclid(100);
+            }
         }
-        amt
-    });
-    for amt in deltas {
-        cur = (((cur + amt) % 100) + 100) % 100;
-        res += (cur == 0).then_some(1).unwrap_or_default();
+        cur = nxt;
     }
-    return res;
+    res
+}
+
+fn parse_dlt(line: &str) -> isize {
+    let res: isize = (&line[1..]).parse().unwrap();
+    if &line[0..1] == "L" {
+        return -res;
+    }
+    res
 }
 
 #[cfg(test)]
 mod tests {
-    #[test]
-    fn test_spans() {
-        let cur = 50;
-        let amt = -60;
-        // i want to verify that we can calculate the number of clicks
-        // that include 0 are correct.
-        let dlt = cur + amt;
-        assert_eq!(dlt, -10);
-        // so now we have --10 -> 50
-        let r = std::ops::Range {
-            start: dlt,
-            end: cur,
-        };
+    use super::*;
 
-        // verify that our modulo arithmetic is ok
-        let cur = (((cur + amt) % 100) + 100) % 100;
-        assert_eq!(cur, 90)
+    #[test]
+    fn test_pt1_ex() {
+        assert_eq!(run(EX1, true), 3);
+    }
+
+    #[test]
+    fn test_pt1() {
+        assert_eq!(run(IN1, true), 980);
+    }
+
+    #[test]
+    fn test_pt2_ex() {
+        assert_eq!(run(EX1, false), 6);
+    }
+
+    #[test]
+    fn test_pt2() {
+        assert_eq!(run(IN1, false), 5961);
     }
 }
