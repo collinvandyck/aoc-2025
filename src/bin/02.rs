@@ -1,5 +1,5 @@
 use anyhow::Result;
-use std::{iter, num::ParseIntError, ops, usize};
+use std::{collections::VecDeque, iter, num::ParseIntError, ops, usize};
 
 static EX1: &str = include_str!("../../data/02/ex1");
 static IN1: &str = include_str!("../../data/02/in1");
@@ -43,7 +43,6 @@ fn set_digits(mut v: usize, buf: &mut Vec<u8>) {
         buf.push((v % 10) as u8);
         v /= 10;
     }
-    buf.reverse();
 }
 
 fn parse(data: &str) -> Vec<Range> {
