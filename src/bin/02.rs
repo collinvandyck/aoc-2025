@@ -39,14 +39,14 @@ fn repeats_any(&v: &usize) -> bool {
         let pow = 10_usize.pow(digits as u32);
         let pow_slice = 10_usize.pow(run_len as u32);
         println!("> run len {run_len} pow_slice: {pow_slice}");
-        for batch in 0..(digits / run_len) {
-            // we need to compute the value of this batch.
-            // start from lhs (most sig bits)
-            let div_amt = 10_usize.pow((batch * run_len) as u32);
+        for (idx, batch) in (0..(digits / run_len)).enumerate() {
+            let div_amt =
+                10_usize.pow(((digits / run_len - batch - 1) * run_len) as u32);
             let div = v / div_amt;
-            let other = 10_usize.pow((batch) as u32);
+            let div2 = 10_usize.pow((batch * run_len) as u32);
+            let modd = v % div2;
             println!(
-                "> batch {batch} div_amt: {div_amt} div: {div} other: {other}"
+                "> idx: {idx} batch: {batch} run_len: {run_len} div_amt: {div_amt} div: {div} div2: {div2} modd: {modd}"
             );
         }
     }
