@@ -18,31 +18,58 @@ struct Range {
 }
 
 fn run(data: &str, pt1: bool) -> usize {
-    let mut digits = vec![];
     parse(data)
         .into_iter()
         .flat_map(|r| (r.from..=r.to))
-        .filter(|v| {
-            set_digits(*v, &mut digits);
-            repeats_twice(v, &digits)
-        })
+        .filter(|v| (pt1 && repeats_twice(v)) || (!pt1 && repeats_any(v)))
         .sum()
 }
 
-fn repeats_twice(v: &usize, digits: &[u8]) -> bool {
-    if digits.len() % 2 != 0 {
+fn repeats_any(&v: &usize) -> bool {
+    if v != 1012 {
         return false;
     }
-    let mid = digits.len() / 2;
-    &digits[..mid] == &digits[mid..]
+
+    let digits = num_digits(v); // eg: 8
+    println!("repeats any: {v} digits: {digits}");
+    for run_len in 1..=(digits / 2) {
+        if digits % run_len != 0 {
+            continue;
+        }
+        let pow = 10_usize.pow(digits as u32);
+        let pow_slice = 10_usize.pow(run_len as u32);
+        println!("> run len {run_len} pow_slice: {pow_slice}");
+        for batch in 0..(digits / run_len) {
+            // we need to compute the value of this batch.
+            // start from lhs (most sig bits)
+            let div_amt = 10_usize.pow((batch * run_len) as u32);
+            let div = v / div_amt;
+            let other = 10_usize.pow((batch) as u32);
+            println!(
+                "> batch {batch} div_amt: {div_amt} div: {div} other: {other}"
+            );
+        }
+    }
+    false
 }
 
-fn set_digits(mut v: usize, buf: &mut Vec<u8>) {
-    buf.clear();
+fn repeats_twice(&v: &usize) -> bool {
+    let digits = num_digits(v);
+    if digits % 2 != 0 {
+        return false;
+    }
+    let mid_pow10 = 10_usize.pow(digits as u32 / 2);
+    let (lhs, rhs) = (v / mid_pow10, v % mid_pow10);
+    lhs == rhs
+}
+
+fn num_digits(mut v: usize) -> usize {
+    let mut digits = 0;
     while v != 0 {
-        buf.push((v % 10) as u8);
+        digits += 1;
         v /= 10;
     }
+    digits
 }
 
 fn parse(data: &str) -> Vec<Range> {
@@ -74,7 +101,7 @@ mod tests {
 
     #[test]
     fn test_pt2_ex() {
-        //assert_eq!(run(EX1, false), 6);
+        assert_eq!(run(EX1, false), 4174379265);
     }
 
     #[test]
