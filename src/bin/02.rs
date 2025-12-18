@@ -1,13 +1,10 @@
-use anyhow::Result;
-use std::{collections::VecDeque, iter, num::ParseIntError, ops, usize};
-
 static EX1: &str = include_str!("../../data/02/ex1");
 static IN1: &str = include_str!("../../data/02/in1");
 
 fn main() {
     println!("ex1: {}", run(EX1, true));
     println!("pt1: {}", run(IN1, true));
-    //println!("ex2: {}", run(EX1, false));
+    println!("ex2: {}", run(EX1, false));
     //println!("pt2: {}", run(IN1, false));
 }
 
@@ -38,19 +35,22 @@ fn repeats_any(&v: &usize) -> bool {
         }
         let pow = 10_usize.pow(digits as u32);
         let pow_slice = 10_usize.pow(run_len as u32);
-        println!("> run len {run_len} pow_slice: {pow_slice}");
-        for (idx, batch) in (0..(digits / run_len)).enumerate() {
+        println!("> v: {v} run len {run_len} pow_slice: {pow_slice}");
+        for idx in (0..(digits / run_len)) {
             let div_amt =
-                10_usize.pow(((digits / run_len - batch - 1) * run_len) as u32);
+                10_usize.pow(((digits / run_len - idx - 1) * run_len) as u32);
+            let mod_amt = pow_slice.pow((idx) as u32);
             let div = v / div_amt;
-            let div2 = 10_usize.pow((batch * run_len) as u32);
-            let modd = v % div2;
             println!(
-                "> idx: {idx} batch: {batch} run_len: {run_len} div_amt: {div_amt} div: {div} div2: {div2} modd: {modd}"
+                "> idx: {idx} run_len: {run_len} div_amt: {div_amt} div: {div} foo:{mod_amt}"
             );
         }
     }
     false
+}
+
+fn slices_of(v: usize, run_len: usize) -> Vec<usize> {
+    todo!()
 }
 
 fn repeats_twice(&v: &usize) -> bool {
@@ -63,7 +63,14 @@ fn repeats_twice(&v: &usize) -> bool {
     lhs == rhs
 }
 
+fn run_lens(num_digits: usize) -> Vec<usize> {
+    (1..=(num_digits / 2)).filter(|x| num_digits % x == 0).collect()
+}
+
 fn num_digits(mut v: usize) -> usize {
+    if v == 0 {
+        return 1;
+    }
     let mut digits = 0;
     while v != 0 {
         digits += 1;
@@ -88,6 +95,34 @@ fn parse(data: &str) -> Vec<Range> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_slices_of() {
+        assert_eq!(slices_of(10, 1), vec![1, 0]);
+        assert_eq!(slices_of(11, 1), vec![1, 1]);
+        assert_eq!(slices_of(1024, 2), vec![10, 24]);
+        assert_eq!(slices_of(1004, 2), vec![10, 4]);
+    }
+
+    #[test]
+    fn test_run_lens() {
+        assert_eq!(run_lens(0), vec![]);
+        assert_eq!(run_lens(1), vec![]);
+        assert_eq!(run_lens(2), vec![1]);
+        assert_eq!(run_lens(3), vec![1]);
+        assert_eq!(run_lens(4), vec![1, 2]);
+        assert_eq!(run_lens(5), vec![1]);
+        assert_eq!(run_lens(6), vec![1, 2, 3]);
+        assert_eq!(run_lens(7), vec![1]);
+        assert_eq!(run_lens(8), vec![1, 2, 4]);
+    }
+
+    #[test]
+    fn test_num_digits() {
+        assert_eq!(num_digits(0), 1);
+        assert_eq!(num_digits(10), 2);
+        assert_eq!(num_digits(1234), 4);
+    }
 
     #[test]
     fn test_pt1_ex() {
