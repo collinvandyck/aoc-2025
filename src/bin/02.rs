@@ -50,7 +50,7 @@ fn repeats_any(&v: &usize) -> bool {
 }
 
 fn slices_of(v: usize, run_len: usize) -> Vec<usize> {
-    todo!()
+    vec![]
 }
 
 fn repeats_twice(&v: &usize) -> bool {
@@ -98,10 +98,10 @@ mod tests {
 
     #[test]
     fn test_slices_of() {
-        assert_eq!(slices_of(10, 1), vec![1, 0]);
-        assert_eq!(slices_of(11, 1), vec![1, 1]);
-        assert_eq!(slices_of(1024, 2), vec![10, 24]);
-        assert_eq!(slices_of(1004, 2), vec![10, 4]);
+        assert_eq!(slices_of(10, 1), vec![1, 0], "(10, 1)");
+        assert_eq!(slices_of(11, 1), vec![1, 1], "(11, 1");
+        assert_eq!(slices_of(1024, 2), vec![10, 24], "(1024, 2)");
+        assert_eq!(slices_of(1004, 2), vec![10, 4], "(1004, 2)");
     }
 
     #[test]
