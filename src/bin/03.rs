@@ -18,80 +18,20 @@ struct Bank {
     batteries: Vec<usize>,
 }
 
-#[derive(Debug, Clone)]
-struct PV {
-    pos: usize,
-    val: usize,
-    rest: Vec<SPV>,
-}
-
-#[derive(Clone)]
-struct SPV(Rc<RefCell<PV>>);
-
-impl std::fmt::Debug for SPV {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let this = self.0.borrow();
-        let rest = this.rest.iter().map(|x| x.val()).collect_vec();
-        write!(f, "(v:{} r:{:?})", this.val, rest)
-    }
-}
-
-impl SPV {
-    fn new(pos: usize, val: usize) -> Self {
-        Self(Rc::new(RefCell::new(PV::new(pos, val))))
-    }
-    fn pos(&self) -> usize {
-        self.0.borrow().pos
-    }
-    fn val(&self) -> usize {
-        self.0.borrow().val
-    }
-    fn rest_len(&self) -> usize {
-        self.0.borrow().rest.len()
-    }
-    fn add(&self, other: &SPV) {
-        if other.pos() > self.pos() {
-            self.0.borrow_mut().rest.push(other.clone());
-        }
-    }
-}
-
-impl PV {
-    fn new(pos: usize, val: usize) -> Self {
-        Self { pos, val, rest: vec![] }
-    }
-}
-
 fn largest_joltage(bank: &Bank, count: usize) -> usize {
-    // println!("batts: {:?}", bank.batteries);
-    // reverse sorted PV { pos, val }
-    let s: Vec<SPV> = bank
-        .batteries
-        .clone()
-        .into_iter()
-        .enumerate()
-        .map(|(pos, val)| SPV::new(pos, val))
-        .sorted_by(|v1, v2| v1.val().cmp(&v2.val()).reverse())
-        .collect_vec();
-
-    // populate the rest fields in the PVs
-    for i in 0..s.len() {
-        for j in 0..s.len() {
-            s[i].add(&s[j]);
-        }
+    let b = &bank.batteries;
+    let len = b.len();
+    let mut res = 0;
+    let mut start = 0;
+    for remaining in (1..=count).rev() {
+        // end needs to be calculated wrt start
+        let end = len - remaining + 1;
+        let next = &b[start..end];
+        let (max_pos, max) = next.iter().enumerate().max_by(|v1, v2| v1.1.cmp(&v2.1)).unwrap();
+        start = max_pos + 1;
+        res = res * 10 + max;
     }
-
-    // filter the pvs by those that have the right count
-    s.iter()
-        .filter(|v| v.rest_len() >= count - 1)
-        .cloned()
-        .map(|found| {
-            let mut pvs = vec![found.clone()];
-            pvs.extend(found.0.borrow().rest.clone());
-            pvs.iter().take(count).fold(0_usize, |acc, pv| acc * 10 + pv.val())
-        })
-        .max()
-        .unwrap_or_default()
+    res
 }
 
 fn parse(s: &str) -> Vec<Bank> {
