@@ -10,7 +10,7 @@ fn main() {
 }
 
 fn run(s: &str, pt1: bool) -> usize {
-    parse(s).iter().map(|b| largest_joltage(b, 2)).sum()
+    parse(s).iter().map(|b| largest_joltage(b, if pt1 { 2 } else { 12 })).sum()
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -24,12 +24,15 @@ fn largest_joltage(bank: &Bank, count: usize) -> usize {
     let mut res = 0;
     let mut start = 0;
     for remaining in (1..=count).rev() {
-        // end needs to be calculated wrt start
-        let end = len - remaining + 1;
-        let next = &b[start..end];
-        let (max_pos, max) = next.iter().enumerate().max_by(|v1, v2| v1.1.cmp(&v2.1)).unwrap();
-        start = max_pos + 1;
-        res = res * 10 + max;
+        let candidates = &b[start..(len - remaining + 1)];
+        let (max_pos, max_batt) = candidates
+            .iter()
+            .copied()
+            .enumerate()
+            .max_by(|a, b| a.1.cmp(&b.1).then(b.0.cmp(&a.0)))
+            .expect("no max found");
+        start = start + max_pos + 1;
+        res = res * 10 + max_batt;
     }
     res
 }
@@ -37,10 +40,8 @@ fn largest_joltage(bank: &Bank, count: usize) -> usize {
 fn parse(s: &str) -> Vec<Bank> {
     s.trim()
         .lines()
-        .map(|line| {
-            let batteries =
-                line.trim().chars().map(|ch| ch.to_digit(10).unwrap() as usize).collect();
-            Bank { batteries }
+        .map(|line| Bank {
+            batteries: line.trim().chars().map(|ch| ch.to_digit(10).unwrap() as usize).collect(),
         })
         .collect()
 }
@@ -57,5 +58,15 @@ mod tests {
     #[test]
     fn test_pt1_in1() {
         assert_eq!(run(IN1, true), 16993);
+    }
+
+    #[test]
+    fn test_pt2_ex1() {
+        assert_eq!(run(EX1, false), 3121910778619);
+    }
+
+    #[test]
+    fn test_pt2_in1() {
+        assert_eq!(run(IN1, false), 168617068915447);
     }
 }
