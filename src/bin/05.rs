@@ -24,20 +24,48 @@ impl State {
 
     fn all_fresh(&self) -> usize {
         let sorted = self.fresh.iter().sorted().copied().collect_vec();
-        println!("{sorted:?}");
-        let mut ranges = vec![];
-        let mut last = Range::default();
-        for rng in self.fresh.iter().sorted().copied() {
-            println!("{ranges:?}");
-            let ahead = rng.from > last.to;
-            last = rng;
-            if ahead {
-                ranges.push(rng);
+        println!("sorted: {sorted:?}\n");
+
+        let mut ranges: Vec<Range> = vec![];
+        for rng in sorted.iter().sorted().copied() {
+            ranges.sort();
+            if ranges.is_empty() {
+                ranges.push(rng.clone());
                 continue;
             }
+            let last = &ranges[ranges.len() - 1];
+            if rng.to == last.to {
+                continue;
+            }
+            if rng.from > last.to {
+                // push after
+                ranges.push(rng.clone());
+                continue;
+            }
+            if rng.from == last.to {
+                if rng.to - rng.from > 1 {
+                    // left bound
+                    ranges.push(Range { from: rng.from + 1, to: rng.to });
+                    continue;
+                } else {
+                    // skip empty range
+                    continue;
+                }
+            }
+            if rng.to > last.to {
+                let nf = last.to + 1;
+                let nt = rng.to;
+                if nt.checked_sub(nf).map(|v| v > 0).unwrap_or_default() {
+                    // push overlap
+                    ranges.push(Range { from: nf, to: nt });
+                    continue;
+                } else {
+                    // overlap sub not valid
+                    continue;
+                }
+            }
         }
-        println!("{ranges:?}");
-        todo!()
+        ranges.iter().map(|r| r.to - r.from + 1).sum()
     }
 }
 
@@ -104,5 +132,10 @@ mod tests {
     #[test]
     fn test_pt2_ex1() {
         assert_eq!(run(EX1, false), 14);
+    }
+
+    #[test]
+    fn test_pt2_in1() {
+        assert_eq!(run(IN1, false), 358155203664116);
     }
 }
