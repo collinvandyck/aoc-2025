@@ -1,4 +1,5 @@
-use itertools::Itertools;
+use aoc::num_digits;
+use itertools::{Itertools, max};
 
 static EX1: &str = include_str!("../../data/06/ex1");
 static IN1: &str = include_str!("../../data/06/in1");
@@ -19,7 +20,7 @@ fn run(s: &str, pt1: bool) -> V {
                     '*' => acc * v,
                     _ => unreachable!(),
                 })
-                .unwrap_or_default()
+                .expect("no data")
         })
         .sum()
 }
@@ -36,16 +37,39 @@ struct Sheet {
 }
 
 fn parse(s: &str, pt1: bool) -> Sheet {
+    println!("{s}");
     let mut lines =
         s.trim().lines().map(|l| l.trim().split_whitespace().collect_vec()).collect_vec();
     let nums = lines.iter().take(lines.len() - 1).collect_vec();
     let operators = lines.iter().last().unwrap();
     let mut sheet = Sheet { operations: vec![] };
-    for col in 0..nums[0].len() {
-        let values = (0..nums.len()).map(|xlrg| nums[xlrg][col].parse().unwrap()).collect();
-        let operator = operators[sheet.operations.len()].chars().next().unwrap();
-        sheet.operations.push(Operation { values, operator });
+    if pt1 {
+        for col in 0..nums[0].len() {
+            let values = (0..nums.len()).map(|xlrg| nums[xlrg][col].parse().unwrap()).collect();
+            let operator = operators[sheet.operations.len()].chars().next().unwrap();
+            sheet.operations.push(Operation { values, operator });
+        }
+    } else {
+        for col in 0..nums[0].len() {
+            let values =
+                (0..nums.len()).map(|xlrg| nums[xlrg][col].parse::<V>().unwrap()).collect_vec();
+            let max_digits = values.iter().map(|v| num_digits(*v)).max().unwrap_or_default();
+            println!("values: {values:?} max_digits: {max_digits}");
+            for digit in (1..=max_digits) {
+                let pos_digit = max_digits - digit + 1;
+                let digits = values
+                    .iter() //
+                    .filter(|v| num_digits(**v) >= digit)
+                    .map(|v| *v)
+                    .collect_vec();
+                println!(">> digits: {digits:?} ({digit}, {pos_digit})");
+                //
+            }
+            let operator = operators[sheet.operations.len()].chars().next().unwrap();
+            sheet.operations.push(Operation { values, operator });
+        }
     }
+    println!("{sheet:#?}");
     sheet
 }
 
